@@ -6,6 +6,7 @@ from django.conf import settings
 import os
 import sys
 import time
+import shutil
 
 
 @python_2_unicode_compatible
@@ -30,7 +31,8 @@ class Benefits(models.Model):
     @staticmethod
     def save_data(uploaded_file, backup=None):
         data_path = os.path.join(settings.MEDIA_ROOT, "data")
-        full_file_name = os.path.join(data_path, uploaded_file.name)
+        safe_name = os.path.basename(uploaded_file.name)
+        full_file_name = os.path.join(data_path, safe_name)
         # the uploaded file is read at once, as duplicated in railsgoat
         # use file.chunk() in a loop can prevent overwhelming system memory
         content = ContentFile(uploaded_file.read())
@@ -67,8 +69,9 @@ class Benefits(models.Model):
     def make_backup(orig_file, data_path, full_file_name):
         if os.path.isfile(full_file_name):
             epoch_time = int(time.time())
+            safe_name = os.path.basename(orig_file.name)
             bak_file_path = "%s/bak%d_%s" % (data_path, epoch_time,
-                                             orig_file.name)
-            # intended vulnerability for command injection
-            os.system("cp %s %s" % (full_file_name, bak_file_path))
+                                             safe_name)
+            # FIX: Use shutil.copy2 instead of os.system to avoid command injection
+            shutil.copy2(full_file_name, bak_file_path)
             return bak_file_path
