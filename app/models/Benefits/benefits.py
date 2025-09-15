@@ -69,6 +69,7 @@ class Benefits(models.Model):
             epoch_time = int(time.time())
             bak_file_path = "%s/bak%d_%s" % (data_path, epoch_time,
                                              orig_file.name)
-            # intended vulnerability for command injection
-            os.system("cp %s %s" % (full_file_name, bak_file_path))
+            # Fix: Use shutil.copy2 for safe file copy instead of os.system
+            import shutil
+            shutil.copy2(full_file_name, bak_file_path)
             return bak_file_path
