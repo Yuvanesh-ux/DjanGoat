@@ -15,5 +15,4 @@ def create_user_values(sender, instance, *args, **kwargs):  # pylint: disable=un
 
 @receiver(pre_save, sender=Pay)
 def encrypt(sender, instance, *args, **kwargs):  # pylint: disable=unused-argument
-    if instance.pk is None:
-        instance.encrypt_bank_num()
+    instance.encrypt_bank_num()
