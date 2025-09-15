@@ -6,6 +6,19 @@ import django.core.validators
 from django.db import migrations, models
 import django.db.models.deletion
 
+def hash_existing_passwords(apps, schema_editor):
+    """
+    Hash all existing plain text passwords in the User table using Django's PBKDF2 hasher.
+    This function is idempotent and will not re-hash already hashed passwords.
+    """
+    from django.contrib.auth.hashers import make_password, identify_hasher
+    User = apps.get_model('app', 'User')
+    for user in User.objects.all():
+        try:
+            identify_hasher(user.password)
+        except Exception:
+            user.password = make_password(user.password)
+            user.save(update_fields=['password'])
 
 class Migration(migrations.Migration):
 
@@ -227,5 +240,9 @@ class Migration(migrations.Migration):
             model_name='keymanagement',
             name='user',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='app.User'),
+        ),
+        migrations.RunPython(
+            code=hash_existing_passwords,
+            reverse_code=migrations.RunPython.noop,
         ),
     ]
